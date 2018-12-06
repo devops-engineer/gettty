@@ -9,6 +9,6 @@ class Gettty < Formula
 	bottle :unneeded
 
   def install
-		bin.install gettty
+	bin.install "gettty"
   end
 end
