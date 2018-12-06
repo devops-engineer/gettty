@@ -3,7 +3,7 @@ class Gettty < Formula
   homepage "https://github.com/devops-engineer"
   url "https://github.com/devops-engineer/homebrew-gettty/archive/v0.1.1-alpha.tar.gz"
   version "0.1.0-alpha"
-  sha256 "edcccbbcf071faaabd25ed89f8b67e073fc22d288808cbd4154c81515511749f"
+  sha256 "39c85dfca30175874681ad203486968a6eac8a356c72306fbfc346bffd6d2e0b"
   # depends_on "cmake" => :build
 
 	bottle :unneeded
