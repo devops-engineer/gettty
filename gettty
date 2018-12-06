@@ -1,0 +1,95 @@
+# declare global variables & initialize
+pods=()       # necessary
+containers=() # necessary
+defaultShell="bash"
+
+# color codes
+export red=`tput setaf 1`
+export green=`tput setaf 2`
+export yellow=`tput setaf 3`
+export bold=`tput bold`
+export uline=`tput smul
+
+show_dialog() {
+  options=("$@")
+  optionsCount=${#options[@]}
+  choice=$(seq ${optionsCount}|xargs|sed "s/ /'|'/g")
+  local selected_items_array_index=0
+  select opt in "${options[@]}"
+  do
+    if [[  $REPLY -le ${optionsCount} && $REPLY -gt 0 ]] ; then
+      #printf "${green}You selected $REPLY => $opt${reset}\n"
+      selected_items_array_index=$(( REPLY - 1 ))
+      break
+    #else
+    #  printf "${yellow}What's that?${reset}" >&2
+    fi
+  done
+  printf $selected_items_array_index
+}
+
+populatePodsArray() {
+  IFS=' ' read -r -a pods <<< $(kubectl get pods --field-selector=status.phase=Running -o=name | sed 's#^pod/##g' | tr '\n', ' ')
+}
+populateContainersArray() {
+  local podName=$1
+  if [[ "${podName}" ]] ; then
+    IFS=' ' read -r -a containers <<< $(kubectl get pods ${podName} -o jsonpath='{.spec.containers[*].name}')
+    #printf "Populating containers of #podName: ${podName}# | Containers are: #${containers[*]}#\n"
+  else
+    printf "variable #podName: ${podName}# is empty\n"
+  fi
+}
+
+checkKubeMasterConnection() {
+  kubectl get pods > /dev/null
+  if [[ "$?" == "0" ]] ; then
+    #printf "Connection to Kubernetes Master is success!"
+    printf  0
+  else
+    #echo "Did not get good response from kubectl call. Is your connection to Kubectl works?"
+    printf 1
+  fi
+}
+
+gettty() {
+  local podSelected=0
+  local containerSelected=0
+  if [[ "$1" == *"help"* ]] ; then
+    printf "\
+      \n${reset}${uline}Description${reset}: Get tty of a container from all the pods currently running \
+      \n${reset}${uline}Usage${reset}      : ${yellow}gettty <podName> < [shell | command to run]>  ; shellName is optional, default: bash \
+      \n${reset}${uline}Examples${reset}   : ${green}\
+      \n  gettty             ; this assumes $defaultShell as default shell, it's configurable \
+      \n  gettty sh          ; You will be get into the shell you specified \
+      \n  gettty ls -l       ; Command will be executed directly \
+      \n${reset}"
+    return 0
+  fi
+  if [[ $(checkKubeMasterConnection) == "1" ]] ; then printf "should exit now...\n"; return 1; fi
+  if [ "$1" == "sh" -o "$1" == "bash" -o "$1" == "zsh" -o "$1" == "tcsh" -o -z "$1" ] ; then
+    tty_options=" -it "
+    shell_options=""
+  else
+    tty_options=""
+    shell_options=" -- "
+  fi
+  shell=${1-bash}
+  populatePodsArray
+  if [[ ${#pods[@]} > 1 ]] ; then
+    printf "\e[33mThere are multiple pods, please choose one...\n\e[0m"
+    PS3='Please Select a POD to gettty: '
+    podSelected=$(show_dialog "${pods[@]}")
+  fi
+  printf "${yellow}Selected Pod: ${pods[${podSelected}]} [auto selected when podCount <=1]${reset}\n"
+  populateContainersArray "${pods[${podSelected}]}"
+  if [[ ${#containers[@]} > 1 ]] ; then
+    PS3='Please Select a container to gettty: '
+    containerSelected=$(show_dialog "${containers[@]}")
+    cmd="kubectl exec ${tty_options} ${pods[${podSelected}]} -c ${containers[${containerSelected}]} ${shell_options} $shell"
+  else
+    cmd="kubectl exec ${tty_options} ${pods[${podSelected}]} ${shell_options} $shell"
+  fi
+  printf "${green}  command: $cmd ${reset}\n"
+  $cmd
+}
