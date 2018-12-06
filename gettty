@@ -8,7 +8,7 @@ export red=`tput setaf 1`
 export green=`tput setaf 2`
 export yellow=`tput setaf 3`
 export bold=`tput bold`
-export uline=`tput smul
+export uline=`tput smul`
 
 show_dialog() {
   options=("$@")
