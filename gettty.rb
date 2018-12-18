@@ -1,7 +1,7 @@
 class Gettty < Formula
   desc "Get a tty of a kubernetes container"
   homepage "https://github.com/devops-engineer"
-  url "https://github.com/devops-engineer/homebrew-gettty/archive/v0.5-alpha.tar.gz"
+  url "https://attache.apple.com/AttacheWeb/gdl?id=1f1b543e-aa0b-4b84-b6a0-f73248b3d066&ek=patu86jbPsJQzReQpPkFiA%3D%3D"
   version "0.5"
   sha256 "d0b8fd5a7819fb1278d3e1764ba69d13d585f414416c460615bcf51329db6152"
 
